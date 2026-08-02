@@ -35,6 +35,9 @@ packages = ["src/attention_router"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# Make the project root importable so `tests.conftest` resolves the same way
+# locally and in CI regardless of how pytest was invoked.
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 96
