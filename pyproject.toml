@@ -24,7 +24,7 @@ dependencies = [
 # library, so neither needs a dependency of its own.
 api = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
 synth = ["pillow>=10.0"]
-dev = ["pytest>=8.0", "ruff>=0.5"]
+dev = ["pytest>=8.0", "ruff==0.14.5"]  # pinned: isort grouping shifts between versions
 
 [project.scripts]
 attention-router = "attention_router.cli:main"
@@ -46,3 +46,8 @@ src = ["src", "tests", "synth"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+# Declared explicitly so `tests` is never guessed at as third-party, which
+# made import ordering differ between a local run and CI.
+known-first-party = ["attention_router", "tests"]

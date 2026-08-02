@@ -3,7 +3,6 @@
 from datetime import datetime
 
 import pytest
-from tests.conftest import message
 
 from attention_router.loader import (
     build_dossier,
@@ -13,6 +12,7 @@ from attention_router.loader import (
     to_int,
     to_opt_int,
 )
+from tests.conftest import message
 
 
 class TestNumericParsing:

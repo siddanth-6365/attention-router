@@ -11,10 +11,10 @@ import sys
 from pathlib import Path
 
 import pytest
-from tests.conftest import StubClient
 
 from attention_router import cli, config, media, rationale, router, safety
 from attention_router.loader import load_dataset, read_csv
+from tests.conftest import StubClient
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 

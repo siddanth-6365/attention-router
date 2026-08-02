@@ -1,9 +1,9 @@
 """JSON extraction and retry behaviour."""
 
 import pytest
-from tests.conftest import StubClient
 
 from attention_router.llm import LLMError, Usage, complete_json, extract_json
+from tests.conftest import StubClient
 
 
 class TestJsonExtraction:

@@ -1,10 +1,10 @@
 """Output contract enforcement and the fallback path."""
 
 import pytest
-from tests.conftest import StubClient, message
 
 from attention_router import config, rationale, router, safety
 from attention_router.retriever import EvidenceRetriever, RetrievalResult
+from tests.conftest import StubClient, message
 
 LISTING = "Selling a denim jacket, size M. Pickup near Gate 2 this weekend."
 

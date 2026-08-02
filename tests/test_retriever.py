@@ -1,8 +1,7 @@
 """Evidence retrieval — the mechanism the whole system rests on."""
 
-from tests.conftest import message
-
 from attention_router.retriever import EvidenceRetriever, tokenize
+from tests.conftest import message
 
 LISTING = "Selling a denim jacket, size M. Pickup near Gate 2 this weekend."
 

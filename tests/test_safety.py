@@ -5,9 +5,9 @@ say what the rules mean rather than what one dataset happened to contain.
 """
 
 import pytest
-from tests.conftest import message
 
 from attention_router import safety
+from tests.conftest import message
 
 ADVISORY = (
     "Safety advisory: we never ask for your OTP, card PIN, or payment details "
