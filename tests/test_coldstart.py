@@ -1,8 +1,7 @@
 """Priors for senders with no history with this receiver."""
 
-from tests.conftest import event, message
-
 from attention_router import coldstart
+from tests.conftest import event, message
 
 
 class TestColdDetection:
