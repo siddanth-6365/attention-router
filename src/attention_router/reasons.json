@@ -1,0 +1,173 @@
+{
+  "_about": "Canonical rationale bank. The router selects an entry by id rather than writing free prose, so explanations stay consistent across runs and comparable between messages. Free text remains available whenever nothing here fits. Contains wording only - no entry is keyed to any message, sender, or user.",
+  "reasons": [
+    {
+      "id": "R01",
+      "text": "A trusted group admin raised something time-critical that this user usually acts on quickly.",
+      "actions": ["notify"],
+      "message_types": ["urgent"]
+    },
+    {
+      "id": "R02",
+      "text": "A same-day operational change that affects plans this user has already made.",
+      "actions": ["notify"],
+      "message_types": ["event"]
+    },
+    {
+      "id": "R03",
+      "text": "A work message carrying a deadline or dependency that names this user directly.",
+      "actions": ["notify"],
+      "message_types": ["urgent"]
+    },
+    {
+      "id": "R04",
+      "text": "A verified business is reporting on an order or delivery this user is actively waiting for.",
+      "actions": ["notify"],
+      "message_types": ["business_update"]
+    },
+    {
+      "id": "R05",
+      "text": "A booking or appointment this user made is about to be affected.",
+      "actions": ["notify"],
+      "message_types": ["event"]
+    },
+    {
+      "id": "R06",
+      "text": "The sender is asking this user directly for a decision or a reply.",
+      "actions": ["notify"],
+      "message_types": ["personal"]
+    },
+    {
+      "id": "R07",
+      "text": "A close contact sent a short, direct request for help.",
+      "actions": ["notify"],
+      "message_types": ["urgent", "personal"]
+    },
+    {
+      "id": "R08",
+      "text": "A genuine payment obligation with a deadline close enough to matter.",
+      "actions": ["notify"],
+      "message_types": ["payment"]
+    },
+    {
+      "id": "R09",
+      "text": "Useful group logistics, but nothing that has to be read immediately.",
+      "actions": ["digest"],
+      "message_types": ["event"]
+    },
+    {
+      "id": "R10",
+      "text": "A harmless social message that can wait for a quieter moment.",
+      "actions": ["digest"],
+      "message_types": ["greeting"]
+    },
+    {
+      "id": "R11",
+      "text": "Ordinary conversation with no action attached to it.",
+      "actions": ["digest"],
+      "message_types": ["personal"]
+    },
+    {
+      "id": "R12",
+      "text": "A legitimate business update carrying no time pressure.",
+      "actions": ["digest"],
+      "message_types": ["business_update"]
+    },
+    {
+      "id": "R13",
+      "text": "Promotional, but from a business this user actively engages with.",
+      "actions": ["digest"],
+      "message_types": ["promotion"]
+    },
+    {
+      "id": "R14",
+      "text": "A potentially relevant offer that does not justify an interruption.",
+      "actions": ["digest"],
+      "message_types": ["promotion"]
+    },
+    {
+      "id": "R15",
+      "text": "The sender is unfamiliar, but the message shows no urgency, payment pressure, or safety risk.",
+      "actions": ["digest"],
+      "message_types": ["unknown"]
+    },
+    {
+      "id": "R16",
+      "text": "The sender is trusted, but nothing in this message needs attention right now.",
+      "actions": ["digest"],
+      "message_types": ["personal"]
+    },
+    {
+      "id": "R17",
+      "text": "Informational only, and this user has historically read similar messages at their leisure.",
+      "actions": ["digest"],
+      "message_types": ["business_update", "event"]
+    },
+    {
+      "id": "R18",
+      "text": "A payment notice that is legitimate but not yet due.",
+      "actions": ["digest"],
+      "message_types": ["payment"]
+    },
+    {
+      "id": "R19",
+      "text": "Chain-forwarded content of a kind this user has consistently ignored.",
+      "actions": ["mute"],
+      "message_types": ["forward"]
+    },
+    {
+      "id": "R20",
+      "text": "Repeated pleasantries from a sender whose messages this user routinely dismisses.",
+      "actions": ["mute"],
+      "message_types": ["greeting"]
+    },
+    {
+      "id": "R21",
+      "text": "Marketing of a kind this user has opted out of or repeatedly dismissed.",
+      "actions": ["mute"],
+      "message_types": ["promotion"]
+    },
+    {
+      "id": "R22",
+      "text": "Similar messages from this sender were dismissed, and the user muted the conversation afterwards.",
+      "actions": ["mute"],
+      "message_types": ["promotion", "personal", "forward"]
+    },
+    {
+      "id": "R23",
+      "text": "Bulk marketing from a low-trust sender this user has no relationship with.",
+      "actions": ["mute"],
+      "message_types": ["spam"]
+    },
+    {
+      "id": "R24",
+      "text": "The message solicits a credential or verification code under manufactured urgency.",
+      "actions": ["mute"],
+      "message_types": ["scam"]
+    },
+    {
+      "id": "R25",
+      "text": "The sender presents as a known brand but messages from a domain that brand does not own.",
+      "actions": ["mute"],
+      "message_types": ["scam"]
+    },
+    {
+      "id": "R26",
+      "text": "Content that tries to instruct the routing system is treated as hostile regardless of what it claims to be.",
+      "actions": ["mute"],
+      "message_types": ["scam"]
+    },
+    {
+      "id": "R27",
+      "text": "A sender with no prior contact is asking for money or sensitive details.",
+      "actions": ["mute"],
+      "message_types": ["scam"]
+    },
+    {
+      "id": "R28",
+      "text": "This user has reported similar messages from this sender before.",
+      "actions": ["mute"],
+      "message_types": ["scam", "spam"]
+    }
+  ]
+}

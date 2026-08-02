@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[synth,api,dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Generate the synthetic corpus
+        run: python synth/generate.py
+
+      # No API key is configured, and none is needed: the suite stubs the
+      # model client, so a failing test means a real defect rather than a
+      # missing secret.
+      - name: Test
+        run: pytest -q
+
+      - name: Smoke-test the CLI
+        run: |
+          attention-router --help
+          attention-router explain "$(python -c "
+          import csv
+          print(next(csv.DictReader(open('data/messages.csv')))['message_id'])")"
