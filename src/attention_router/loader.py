@@ -1,9 +1,15 @@
-"""Dataset loading, indexing, and per-message context assembly.
+"""Corpus loading, indexing, and per-message context assembly.
 
-Reads the thirteen participant-facing CSVs with the standard library only and
-exposes them as lookup indexes. `build_dossier` joins the receiving user, the
-conversation, the sender relationship, and the notification load into the
-personalisation packet the router reasons over.
+Reads a directory of CSVs with the standard library only and exposes them as
+lookup indexes. `build_dossier` joins the receiving user, the conversation, the
+sender relationship, and the notification load into the personalisation packet
+the router reasons over.
+
+Only `message_history.csv` and `message_events.csv` are required - together
+they are the behavioural record everything else is built on. The remaining
+tables enrich the decision and are read when present, so you can point this at
+your own data without first synthesising columns you do not have. See
+docs/DATA_SCHEMA.md for the full contract.
 """
 
 from __future__ import annotations
@@ -22,7 +28,7 @@ Row = dict[str, str]
 
 
 def to_int(value: str | None, default: int = 0) -> int:
-    """Tolerant int parse: blank cells are common in this dataset."""
+    """Tolerant int parse: blank cells are expected throughout."""
     try:
         return int(str(value).strip())
     except (TypeError, ValueError):
@@ -32,9 +38,9 @@ def to_int(value: str | None, default: int = 0) -> int:
 def to_opt_int(value: str | None) -> int | None:
     """Like `to_int` but preserves 'not recorded' as None.
 
-    `reaction_time_minutes` is blank on 134/412 event rows, and a blank there
-    means the user never engaged - which is not the same as reacting in 0
-    minutes. Collapsing it to 0 would invert the signal.
+    Used for `reaction_time_minutes`, where a blank means the user never
+    engaged at all - which is not the same as reacting in 0 minutes.
+    Collapsing it to 0 would invert the signal the router depends on.
     """
     try:
         return int(str(value).strip())
@@ -47,7 +53,7 @@ def to_bool(value: str | None) -> bool:
 
 
 def parse_timestamp(value: str | None) -> datetime | None:
-    """Parse the dataset's timestamp formats ('%Y-%m-%d %H:%M' and date-only)."""
+    """Parse the accepted timestamp formats ('%Y-%m-%d %H:%M' and date-only)."""
     text = (value or "").strip()
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
         try:
@@ -121,28 +127,61 @@ class Dataset:
         return (self.groups.get(group_id) or {}).get("group_name", "")
 
 
-def load_dataset(dataset_dir=None) -> Dataset:
-    """Read every context CSV and build the lookup indexes."""
+def read_optional(path) -> list[Row]:
+    """Read a table that may legitimately not exist.
+
+    Only three tables are load-bearing: the messages being routed, the history
+    they are compared against, and the reactions to that history. Everything
+    else enriches the decision. Treating the rest as optional is what lets you
+    point this at your own data without first inventing a business-accounts
+    table you do not have.
+    """
+    return read_csv(path) if path.exists() else []
+
+
+# Tables the router cannot do its job without.
+REQUIRED_TABLES = ("message_history.csv", "message_events.csv")
+
+
+def load_dataset(dataset_dir=None, *, strict: bool = True) -> Dataset:
+    """Read the context tables and build the lookup indexes.
+
+    Missing optional tables degrade specific signals rather than failing:
+    without `groups.csv` there is no group context, without
+    `business_accounts.csv` the impersonation rule cannot fire. Pass
+    `strict=False` to tolerate missing history too, which is only useful when
+    routing purely on content.
+    """
     base = dataset_dir or config.DATASET_DIR
     data = Dataset()
 
-    data.users = {r["user_id"]: r for r in read_csv(base / "users.csv")}
-    data.groups = {r["group_id"]: r for r in read_csv(base / "groups.csv")}
+    if strict:
+        missing = [name for name in REQUIRED_TABLES if not (base / name).exists()]
+        if missing:
+            raise FileNotFoundError(
+                f"{base} is missing {', '.join(missing)}. These carry the behavioural "
+                f"history the router personalises on. Generate a corpus with "
+                f"`python synth/generate.py`, point ATTENTION_ROUTER_DATA at your own, "
+                f"or pass strict=False to route on content alone."
+            )
+
+    data.users = {r["user_id"]: r for r in read_optional(base / "users.csv")}
+    data.groups = {r["group_id"]: r for r in read_optional(base / "groups.csv")}
     data.memberships = {
-        (r["group_id"], r["user_id"]): r for r in read_csv(base / "group_members.csv")
+        (r["group_id"], r["user_id"]): r for r in read_optional(base / "group_members.csv")
     }
     data.businesses = {
-        r["business_id"]: r for r in read_csv(base / "business_accounts.csv")
+        r["business_id"]: r for r in read_optional(base / "business_accounts.csv")
     }
     data.business_relations = {
         (r["user_id"], r["business_id"]): r
-        for r in read_csv(base / "user_business_history.csv")
+        for r in read_optional(base / "user_business_history.csv")
     }
 
     by_counterpart: dict[tuple[str, str], list[Row]] = defaultdict(list)
     by_group: dict[tuple[str, str], list[Row]] = defaultdict(list)
     by_user: dict[str, list[Row]] = defaultdict(list)
-    for row in read_csv(base / "message_history.csv"):
+    for row in read_optional(base / "message_history.csv"):
         data.history[row["message_id"]] = row
         user_id = row["user_id"]
         by_user[user_id].append(row)
@@ -157,16 +196,16 @@ def load_dataset(dataset_dir=None) -> Dataset:
     data.history_by_user = dict(by_user)
 
     data.events = {
-        (r["user_id"], r["message_id"]): r for r in read_csv(base / "message_events.csv")
+        (r["user_id"], r["message_id"]): r for r in read_optional(base / "message_events.csv")
     }
 
-    for row in read_csv(base / "images.csv"):
+    for row in read_optional(base / "images.csv"):
         data.media_paths[row["image_id"]] = row["file_path"]
-    for row in read_csv(base / "voice_notes.csv"):
+    for row in read_optional(base / "voice_notes.csv"):
         data.media_paths[row["voice_note_id"]] = row["file_path"]
 
     load: dict[str, list[Row]] = defaultdict(list)
-    for row in read_csv(base / "daily_notification_summary.csv"):
+    for row in read_optional(base / "daily_notification_summary.csv"):
         load[row["user_id"]].append(row)
     data.notification_load = dict(load)
 

@@ -88,3 +88,62 @@ class TestDossier:
         assert engaged != rejecting
         assert engaged["sender"]["historically_opened"] > 0
         assert rejecting["sender"]["historically_muted_after"] > 0
+
+
+class TestBringYourOwnData:
+    """The corpus contract: two tables required, the rest optional.
+
+    This is what makes the project usable against someone else's data without
+    inventing columns they do not have.
+    """
+
+    def _write(self, directory, name, header, rows):
+        import csv
+        with (directory / name).open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=header)
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def _minimal(self, directory):
+        self._write(directory, "message_history.csv", [
+            "message_id", "user_id", "conversation_type", "group_id", "business_id",
+            "sender_user_id", "created_at", "message_text", "media_type", "media_id",
+            "forwarded_count"], [{
+                "message_id": "h1", "user_id": "u1", "conversation_type": "personal",
+                "group_id": "", "business_id": "", "sender_user_id": "u2",
+                "created_at": "2026-01-01 10:00", "message_text": "selling a bike",
+                "media_type": "", "media_id": "", "forwarded_count": "0"}])
+        self._write(directory, "message_events.csv", [
+            "user_id", "message_id", "message_opened", "message_replied",
+            "reaction_time_minutes", "notification_dismissed", "muted_after_message",
+            "message_reported"], [{
+                "user_id": "u1", "message_id": "h1", "message_opened": "0",
+                "message_replied": "0", "reaction_time_minutes": "",
+                "notification_dismissed": "1", "muted_after_message": "1",
+                "message_reported": "0"}])
+
+    def test_two_tables_are_enough(self, tmp_path):
+        from attention_router.loader import load_dataset
+        self._minimal(tmp_path)
+        data = load_dataset(tmp_path)
+        assert len(data.history) == 1
+        assert data.users == {} and data.businesses == {}
+
+    def test_retrieval_works_on_a_minimal_corpus(self, tmp_path):
+        from attention_router.loader import load_dataset
+        from attention_router.retriever import EvidenceRetriever
+        self._minimal(tmp_path)
+        result = EvidenceRetriever(load_dataset(tmp_path)).retrieve(message(
+            user_id="u1", sender_user_id="u2", message_text="selling a bike"))
+        assert result.tier == "counterpart"
+        assert result.signal()["verdict"] == "actively_rejected"
+
+    def test_missing_required_tables_explain_themselves(self, tmp_path):
+        from attention_router.loader import load_dataset
+        with pytest.raises(FileNotFoundError, match="message_history.csv"):
+            load_dataset(tmp_path)
+
+    def test_strict_false_allows_a_contentless_corpus(self, tmp_path):
+        from attention_router.loader import load_dataset
+        data = load_dataset(tmp_path, strict=False)
+        assert data.history == {}
